@@ -1,0 +1,213 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- deck.gl standalone bundle -->
+    <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+
+    <!-- Maplibre dependencies -->
+    <!--<script src='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js'></script>-->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <!--<script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>-->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="./style.json">
+    <link href="https://api.mapbox.com/styles/v1/hskim8894/cljzeu8j0001u01rj48n53zel.html?title=copy&access_token=pk.eyJ1IjoiaHNraW04ODk0IiwiYSI6ImNsamd6cGwwdDBkaTEzcXA1bThiYjU0d3UifQ.ROUZosmduCnZ-BF8kdlw8A&zoomwheel=true&fresh=true#16.94/35.161007/129.141838/0/75">
+   <!-- <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' /> -->
+   <title>Hexagon Map</title>
+
+    <style type="text/css">
+      body {margin: 0; padding: 0;}
+      #map-container {width: 100vw; height: 100vh; position: absolute}
+    </style>
+  </head>
+
+  <body>
+    <div id="map-container">
+    </div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </body>
+
+  <script type="text/javascript"> 
+
+const DATA_URL =
+  'https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv';
+
+const colorRange = [
+  [1, 152, 189],
+  [73, 227, 206],
+  [216, 254, 181],
+  [254, 237, 177],
+  [254, 173, 84],
+  [209, 55, 78]
+];
+
+
+
+
+const material = {
+  ambient: 0.64,
+  diffuse: 0.6,
+  shininess: 32,
+  specularColor: [51, 51, 51]
+};
+
+//let airport = [126.45087598079584,37.449208862434624];
+let longitude = 126.45087598079584;
+let latitude = 37.449208862434624; // Incheon Intl Airport
+
+// source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
+
+let hexagonLayer;
+let deckgl;
+let test;
+
+
+const hexagonData = d3.csv('https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv');
+
+const getData = () => {
+  fetch('https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv')
+  .then(response => response.text())
+  .then(csvData => {
+    // Do something with the CSV data
+    console.log("csvData: ", csvData);
+    console.log(2);
+    test = csvData;
+  })
+  .catch(error => {
+    // Handle any errors that occur during the fetch
+    console.error(error);
+  });
+}
+
+//getData(); 
+console.log("hx: ", hexagonData);
+console.log(1);
+
+const testData = [
+  {lng: -0.198465, lat: 51.505538, value: 2.1},
+  {lng: -0.178838, lat: 51.491836, value: 4.5},
+  {lng: -0.20559, lat: 51.51491, value: 2.1},
+  {lng: -0.208327, lat: 51.514952, value: 7.1},
+  {lng: -0.206022, lat: 51.496572, value: 12.1},
+  {lng: -0.19361, lat: 51.500788, value: 2.1},
+  {lng: -0.173519, lat: 51.495171, value: 2.1},
+  {lng: -0.163542, lat: 51.492497, value: 4.1},
+  {lng: -0.21198, lat: 51.513659, value: 11.1},
+  {lng: -0.199786, lat: 51.5159, value: 2.1},
+  {lng: -0.216407, lat: 51.518402, value: 2.1},
+  {lng: -0.184495, lat: 51.501726, value: 12.1},
+  {lng: -0.172522, lat: 51.491289, value: 4.3},
+  {lng: -0.195797, lat: 51.492818, value: 12.1},
+  {lng: -0.166886, lat: 51.488143, value: 2.1},
+  {lng: -0.166882, lat: 51.488233, value: 2.1},
+  {lng: -0.214099, lat: 51.51477, value: 2.1},
+  {lng: -0.183889, lat: 51.484361, value: 2.1},
+  {lng: -0.207725, lat: 51.519259, value: 2.1},
+  {lng: -0.172964, lat: 51.491026, value: 2.1},
+  {lng: -0.163102, lat: 51.499864, value: 2.1},
+  {lng: -0.192941, lat: 51.488548, value: 2.1},
+  {lng: -0.193675, lat: 51.488199, value: 2.1},
+  {lng: -0.215564, lat: 51.51785, value: 2.1},
+  {lng: -0.185515, lat: 51.483307, value: 2.1},
+  {lng: -0.163793, lat: 51.496997, value: 2.1},
+  {lng: -0.158276, lat: 51.494483, value: 2.1},
+  {lng: -0.194671, lat: 51.506739, value: 2.1},
+  {lng: -0.167365, lat: 51.483385, value: 2.1},
+  {lng: -0.167321, lat: 51.48806, value: 12.1},
+  {lng: -0.172881, lat: 51.482302, value: 2.1},
+  {lng: -0.197319, lat: 51.509028, value: 4.1},
+  {lng: -0.160434, lat: 51.501711, value: 2.1},
+  {lng: -0.215936, lat: 51.504636, value: 2.1},
+  {lng: -0.215377, lat: 51.5263, value: 2.1},
+  {lng: -0.185591, lat: 51.485017, value: 2.1},
+  {lng: -0.164763, lat: 51.483614, value: 2.1},
+  {lng: -0.159271, lat: 51.501962, value: 2.1},
+  {lng: -0.18286, lat: 51.484885, value: 2.1},
+  {lng: -0.166709, lat: 51.492547, value: 2.1},
+  {lng: -0.165997, lat: 51.492356, value: 2.1},
+  {lng: -0.214056, lat: 51.519535, value: 12.1},
+  {lng: -0.205446, lat: 51.514908, value: 2.1},
+  {lng: -0.176955, lat: 51.48848, value: 2.1},
+  {lng: -0.15865, lat: 51.495928, value: 22.1},
+  {lng: -0.227035, lat: 51.519372, value: 2.1},
+  {lng: -0.192799, lat: 51.499426, value: 2.1},
+  {lng: -0.173334, lat: 51.481769, value: 2.1},
+  {lng: -0.196819, lat: 51.510729, value: 42.1},
+  {lng: -0.193059, lat: 51.50015, value: 2.1},
+  {lng: -0.157984, lat: 51.494568, value: 2.1}
+];
+
+const createHexagon = () => {
+      hexagonLayer = new deck.HexagonLayer({
+            id: 'hexagon',
+            getColorRange: colorRange,
+            coverage: 1,
+            data: testData,
+            getElevationRange: [0, 3000],
+            elevationScale: 25,
+            getElevationValue: points => {
+              return Math.floor(Math.random() * 5)
+            },
+            extruded: true,
+            getPosition: d => [d.lat, d.lng],
+            pickable: true,
+            radius: 1000,
+            lightSettings: material,
+
+            transitions: {
+                elevationScale: 3000
+            }
+          });
+    }
+
+console.log("cH:", createHexagon);
+
+const createDeck = () => { 
+  deckgl = new deck.DeckGL({
+      container: 'map-container',
+      // Set your Mapbox access token here
+      mapboxApiAccessToken: 'pk.eyJ1IjoiaHNraW04ODk0IiwiYSI6ImNsamd6cGwwdDBkaTEzcXA1bThiYjU0d3UifQ.ROUZosmduCnZ-BF8kdlw8A',
+
+      mapStyle: 'mapbox://styles/mapbox/dark-v10',
+
+      initialViewState: {
+        latitude: latitude,
+        longitude: longitude,
+        zoom: 7,
+        minZoom: 5,
+        maxZoom: 10,
+        bearing: 0,
+        pitch: 40,
+      },
+      controller: true,
+    
+      /* Possible Layers: ScatterplotLayer, ArcLayer, LineLayer, PolygonLayer, GeoJsonLayer, IconLayer, TextLayer, HexagonLayer
+      HeatmapLayer, 3D Layer, TripsLayer, Custom Layer*/
+      layers: [hexagonLayer]
+    });
+
+    }
+
+    createHexagon();
+    createDeck();
+
+  </script> 
+</html>
+
+<!--
+mapbox://styles/hskim8894/cljzeu8j0001u01rj48n53zel
+
+fetch('https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv')
+    .then(res => res.text())
+    .then(data => {
+      hexagonData = data;
+      console.log("HD", hexagonData);
+      createHexagon();
+      createDeck();
+    })
+    .catch(error => {
+      console.log('Error:', error)
+    });
+
+-->

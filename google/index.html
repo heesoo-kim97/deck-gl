@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://unpkg.com/deck.gl@^7.0.0/dist.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDx-MYKVl_R9I4A_VzuRt4e1ohxS6kF5Kc&libraries=visualization&v=3.34"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoogleMap deckgl</title>
+    <style type="text/css">
+      body {margin: 0; padding: 0; overflow: hidden;}
+      #container {width: 100vw; height: 100vh;}
+      #tooltip {position: absolute; z-index: 1; background: #000; color: #fff; font-family: sans-serif; font-size: 11px; padding: 4px; padding: 8px; pointer-events: none;}
+    </style>
+  </head>
+
+  <body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+  </body>
+
+  <script type="text/javascript">
+
+// source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
+const AIR_PORTS =
+  'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_airports.geojson';
+
+function setTooltip({x, y, object}) {
+  const tooltip = document.getElementById('tooltip');
+  if (object) {
+    tooltip.style.display = 'block';
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+    tooltip.innerHTML = object.properties.name;
+  } else {
+    tooltip.style.display = 'none';
+  }
+}
+const test = function() {
+  console.log(2)
+}
+
+const map = new google.maps.Map(document.getElementById('container'), {
+  center: {lat: 51.47, lng: 0.45},
+  zoom: 5
+});
+
+const deckOverlay = new deck.GoogleMapsOverlay({
+  layers: [
+    new deck.GeoJsonLayer({
+      id: 'airports',
+      data: AIR_PORTS,
+
+      filled: true,
+      pointRadiusMinPixels: 2,
+      opacity: 1,
+      pointRadiusScale: 2000,
+      getRadius: f => (11 - f.properties.scalerank),
+      getFillColor: [200, 0, 80, 180],
+
+      pickable: true,
+      autoHighlight: true,
+      onHover: setTooltip,
+      onClick: function(){
+        alert(1);
+
+      }
+    }),
+    new deck.ArcLayer({
+      id: 'arcs',
+      data: AIR_PORTS,
+      dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
+      getSourcePosition: f => [-0.4531566,51.4709959], // London
+      getTargetPosition: f => f.geometry.coordinates,
+      getSourceColor: [0, 128, 200],
+      getTargetColor: [200, 0, 80],
+      getWidth: 2
+    })
+  ]
+}); 
+
+
+deckOverlay.setMap(map);
+  </script>
+</html>
+

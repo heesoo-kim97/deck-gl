@@ -1,0 +1,42 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "scalerank": 9,
+                "type": "small",
+                "name": "Sahnewal",
+                "abbrev": "LUH",
+                "location": "terminal",
+                "gps_code": "VILD",
+                "iata_code": "LUH",
+                "wikipedia": "http://en.wikipedia.org/wiki/Sahnewal_Airport",
+                "natlscale": 8,
+                "featureclass": "Airport"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [75.95707224036518, 30.850359856170176]
+            }
+        }, {
+            "type": "Feature",
+            "properties": {
+                "scalerank": 9,
+                "type": "mid",
+                "name": "Solapur",
+                "abbrev": "SSE",
+                "location": "terminal",
+                "gps_code": "VASL",
+                "iata_code": "SSE",
+                "wikipedia": "http://en.wikipedia.org/wiki/Solapur_Airport",
+                "natlscale": 8,
+                "featureclass": "Airport"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [75.93305977107549, 17.625415183635024]
+            }
+        }
+    ]
+}

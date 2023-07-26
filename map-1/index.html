@@ -1,0 +1,272 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- deck.gl standalone bundle -->
+    <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+
+    <!-- Maplibre dependencies -->
+    <!--<script src='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js'></script>-->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <!--<script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>-->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
+   <!-- <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' /> -->
+   <title>Map-1</title>
+
+    <style type="text/css">
+      body {margin: 0; padding: 0;}
+      #map-container {width: 100vw; height: 100vh; position: absolute; background: #627a84}
+      #tooltip {width: 500px; height: 25px; background-color: #555555; z-index: 2; 
+                color:aliceblue; display: none; justify-content: center; position: absolute;
+                }
+    </style>
+  </head>
+
+  <body>
+    <div id="map-container">
+      <div id="tooltip"></div>
+    </div>
+    
+  
+  </body>
+
+  <script type="text/javascript"> 
+
+
+
+let airportData;
+let airport = [126.45087598079584,37.449208862434624];
+let airportName = "Incheon Int'l";
+let longitude = 126.45087598079584;
+let latitude = 37.449208862434624; // Incheon Intl Airport
+
+// source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
+
+let arcLayer;
+let geoJsonLayer;
+let deckgl;
+let count = 0;
+let sourceColor = [0, 128, 200];
+let targetColor = [200, 0, 80];
+
+const tooltip = document.getElementById("tooltip");
+const map = document.getElementById("map-container");
+
+const showToolTip = (object, x, y) => {
+      console.log(object);
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+
+      tooltip.textContent = `${airportName} Airport to ${object.properties.name} Airport.`;
+
+      tooltip.style.display = 'flex';
+    }
+
+const hideToolTip = () => {
+  tooltip.style.display = 'none';
+}
+
+map.addEventListener('click', (e) => {
+  const clickedElement = event.target;
+  console.log(clickedElement);
+  if(!clickedElement.closest('arcs') && clickedElement !== tooltip) {
+    hideToolTip();
+  }
+})
+
+fetch('https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_airports.geojson')
+    .then(res => res.json())
+    .then(data => {
+      airportData = data;
+      console.log(222222);
+      createArc();
+      createGeoJson();
+      createDeck();
+    })
+    .catch(error => {
+      console.log('Error:', error)
+    });
+
+    console.log(11111);
+const createDeck = () => { 
+  deckgl = new deck.DeckGL({
+      container: 'map-container',
+      // Set your Mapbox access token here
+      mapboxApiAccessToken: 'pk.eyJ1Ijoia2F0YW1hcmFuaTQiLCJhIjoiY2ppNDdtenh5MDFkYTN2b2VjOG5ucmIybCJ9.AG0bncC30hHPHVRnVGeCxQ',
+
+      mapStyle: 'mapbox://styles/mapbox/navigation-preview-night-v4',
+      
+      /*
+      mapStyles:
+        1. Streets: mapbox://styles/mapbox/streets-v11
+        2. Outdoors: mapbox://styles/mapbox/outdoors-v11
+        3. Light: mapbox://styles/mapbox/light-v10
+        4. Dark: mapbox://styles/mapbox/dark-v10
+        5. Satellite: mapbox://styles/mapbox/satellite-v9
+        6. Satellite Streets: mapbox://styles/mapbox/satellite-streets-v11
+        7. Navigation Preview Day: mapbox://styles/mapbox/navigation-preview-day-v4
+        8. Navigation Preview Night: mapbox://styles/mapbox/navigation-preview-night-v4
+        9. Traffic Day: mapbox://styles/mapbox/traffic-day-v2
+        10. Traffic Night: mapbox://styles/mapbox/traffic-night-v2
+        11. North Star: mapbox://styles/mapbox/navigation-guidance-night-v4
+        12. Basic: mapbox://styles/mapbox/basic-v9
+        13. Comic: mapbox://styles/mapbox/comic-v9
+        14. Whaam: mapbox://styles/mapbox/whaam-v9
+      */
+
+      initialViewState: {
+        latitude: latitude,
+        longitude: longitude,
+        zoom: 4.5,
+        bearing: 0,
+        pitch: 30,
+      },
+      controller: true,
+    
+      /* Possible Layers: ScatterplotLayer, ArcLayer, LineLayer, PolygonLayer, GeoJsonLayer, IconLayer, TextLayer, HexagonLayer
+      HeatmapLayer, 3D Layer, TripsLayer, Custom Layer*/
+      layers: [geoJsonLayer , arcLayer]
+    });
+
+    const newLayer = deckgl.props.layers;
+    }
+
+   
+
+    const createGeoJson = () => {
+      geoJsonLayer = new deck.GeoJsonLayer({
+            id: 'airports',
+            data: airportData,
+            // Styles
+            filled: true,
+            pointRadiusMinPixels: 2,
+            pointRadiusScale: 2000,
+            getPointRadius: f => (11 - f.properties.scalerank),
+            getFillColor: [200, 0, 80, 180],
+            // Interactive props
+            pickable: true,
+            autoHighlight: true,
+            onClick: info => {
+              console.log("info", info.object);
+              airportName = info.object.properties.name;
+              console.log(airportName);
+              const event = new Event('newLocation');
+              event.detail = { data: info.object.geometry.coordinates, info: info};
+              document.dispatchEvent(event);
+             
+              /*info.object && alert(`${info.object.properties.name} (${info.object.properties.abbrev})`);*/
+              
+            } 
+          });
+    }
+
+    const createArc = () => {
+      arcLayer =  new deck.ArcLayer({
+            id: 'arcs',
+            data: airportData,
+            dataTransform: d => d.features.filter(f => f.properties.scalerank < 3 ),
+            // Styles
+            getSourcePosition: f => airport,  // [-0.4531566,51.4709959] London // [126.45087598079584,37.449208862434624] Seoul
+            getTargetPosition: f => f.geometry.coordinates,
+            getSourceColor: sourceColor,
+            getTargetColor: targetColor,
+            getWidth: 3,
+            pickable: true,
+            autoHighlight: true,
+            highlightColor: [255, 33, 113],
+            onHover: ({ object, x, y}) => {
+                if(object) {
+                  showToolTip(object, x, y);
+                } else {
+                  hideToolTip();
+                }
+            }
+          });
+    }
+
+    
+
+    const newLocationHandler = (e) => {
+      airport = e.detail.data;
+      const newInfo = e.detail.info;
+
+      console.log(newInfo);
+      const arcID = "arc" + count;
+      //longitude = airport[0];
+      //latitude = airport[1];
+      count++;
+
+      const updatedArcLayer = new deck.ArcLayer({
+        id: arcID,
+            data: airportData,
+            dataTransform: d => d.features.filter(f => f.properties.scalerank < 4),
+            // Styles
+            getSourcePosition: f => airport,  // [-0.4531566,51.4709959] London // [126.45087598079584,37.449208862434624] Seoul
+            getTargetPosition: f => f.geometry.coordinates,
+            getSourceColor: [0, 128, 200],
+            getTargetColor: [200, 0, 80],
+            getWidth: 3,
+            pickable: true,
+            autoHighlight: true,
+            highlightColor: [255, 33, 113],
+            onClick: ({ object, x, y}) => {
+                if(object) {
+                  showToolTip(object, x, y);
+                } else {
+                  hideToolTip();
+                }
+            }
+      })
+
+      deckgl.setProps({ layers: [geoJsonLayer , updatedArcLayer] });
+      console.log(deckgl);
+      //createArc();     
+    }
+    document.addEventListener('newLocation', newLocationHandler); 
+
+/* 
+  
+*/
+ 
+/*
+    let frame = 0;
+      let animationFrameId = null;
+
+      const animate = () => {
+        const updatedData = airport.map(arc => ({
+        ...arc,
+        sourcePosition: getUpdatedPosition(arc.sourcePosition, frame),
+        targetPosition: getUpdatedPosition(arc.targetPosition, frame)
+  }));
+      }
+      
+      animate();
+
+      arcLayer.props.data = updatedData;
+
+      animationFrameId = requestAnimationFrame(animate);
+
+      frame++; */
+
+
+
+//animate();
+/*
+function animate() {
+  const animatedArcData = generateAnimatedArcData(frame);
+
+  arcLayer.setProps({ data: animatedArcData });
+
+  requestAnimationFrame(animate);
+
+  frame++;
+}
+
+function generateAnimatedArcData(frame) {
+  const animatedArcData = initialArcData.map(arc => {
+    const { sourcePosition, targetPosition } = arc;
+  })
+} */
+
+  </script> 
+</html>
